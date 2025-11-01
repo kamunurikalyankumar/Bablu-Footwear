@@ -1,4 +1,4 @@
-from flask import Flask, render_template, send_from_directory
+from flask import Flask, render_template, send_from_directory, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from .routes.auth import auth_bp
@@ -9,7 +9,10 @@ from .routes.admin import admin_bp
 import os
 
 # Create the Flask application
-app = Flask(__name__, template_folder='templates', static_folder='static')
+app = Flask(__name__, 
+           template_folder='templates',
+           static_folder='static',
+           static_url_path='/static')
 
 def create_app(config_object=None):
     global app
@@ -72,26 +75,17 @@ def create_app(config_object=None):
     # Error handlers
     @app.errorhandler(404)
     def page_not_found(e):
+        app.logger.error(f'Page not found: {request.url}')
         return render_template('404.html'), 404
 
     @app.errorhandler(500)
     def internal_server_error(e):
+        app.logger.error(f'Server Error: {e}')
         return render_template('500.html'), 500
 
     # Serve static files
-    @app.route('/assets/<path:path>')
-    def serve_assets(path):
-        return send_from_directory('static/assets', path)
-
-    # Serve HTML pages
-    @app.route('/')
-    def index():
-        return render_template('index.html')
-
-    @app.route('/<path:path>')
-    def serve_page(path):
-        if path.endswith('.html'):
-            return render_template(path)
-        return render_template('index.html')
+    @app.route('/static/<path:filename>')
+    def serve_static(filename):
+        return send_from_directory(app.static_folder, filename)
 
     return app
