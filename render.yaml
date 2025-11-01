@@ -5,7 +5,7 @@
         "PYTHON_VERSION": "3.12.0"
     },
     "buildCommand": "pip install -r requirements.txt",
-    "startCommand": "gunicorn --bind 0.0.0.0:$PORT --workers 4 --threads 8 --timeout 0 --log-level debug app:app",
+    "startCommand": "gunicorn --bind 0.0.0.0:$PORT --workers 4 --threads 8 --timeout 0 --log-level debug wsgi:app",
     "rootDir": ".",
     "envVars": {
         "FLASK_APP": "app.py",
