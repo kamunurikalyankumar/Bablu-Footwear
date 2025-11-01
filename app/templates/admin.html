@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Admin Panel - Zay Shop</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/templatemo.css">
+    <link rel="stylesheet" href="assets/css/custom.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">Admin Panel</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#products">Products</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#orders">Orders</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#users">Users</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div id="products" class="mb-5">
+            <h2>Products</h2>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">Add Product</button>
+            <div id="productsList"></div>
+        </div>
+
+        <div id="orders" class="mb-5">
+            <h2>Orders</h2>
+            <div id="ordersList"></div>
+        </div>
+
+        <div id="users" class="mb-5">
+            <h2>Users</h2>
+            <div id="usersList"></div>
+        </div>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div class="modal fade" id="addProductModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addProductForm">
+                        <div class="mb-3">
+                            <label for="productName" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="productName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="productDescription" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productPrice" class="form-label">Price</label>
+                            <input type="number" step="0.01" class="form-control" id="productPrice" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productCategory" class="form-label">Category</label>
+                            <input type="text" class="form-control" id="productCategory" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productImage" class="form-label">Image URL</label>
+                            <input type="url" class="form-control" id="productImage" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productStock" class="form-label">Stock Quantity</label>
+                            <input type="number" class="form-control" id="productStock" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Product</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/jquery-1.11.0.min.js"></script>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        function loadProducts() {
+            $.ajax({
+                url: '/api/products/',
+                method: 'GET',
+                headers: { 'Authorization': 'Bearer ' + token },
+                success: function(products) {
+                    let html = '<div class="row">';
+                    products.forEach(product => {
+                        html += `
+                            <div class="col-md-4 mb-3">
+                                <div class="card">
+                                    <img src="${product.image_url}" class="card-img-top" alt="${product.name}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${product.name}</h5>
+                                        <p class="card-text">${product.description}</p>
+                                        <p class="card-text">$${product.price}</p>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteProduct('${product.id}')">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    $('#productsList').html(html);
+                }
+            });
+        }
+
+        function loadOrders() {
+            $.ajax({
+                url: '/api/admin/orders',
+                method: 'GET',
+                headers: { 'Authorization': 'Bearer ' + token },
+                success: function(orders) {
+                    let html = '<table class="table"><thead><tr><th>ID</th><th>User</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+                    orders.forEach(order => {
+                        html += `
+                            <tr>
+                                <td>${order.id}</td>
+                                <td>${order.user}</td>
+                                <td>$${order.total_amount}</td>
+                                <td>${order.order_status}</td>
+                                <td>
+                                    <select onchange="updateOrderStatus('${order.id}', this.value)">
+                                        <option value="pending" ${order.order_status === 'pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="processing" ${order.order_status === 'processing' ? 'selected' : ''}>Processing</option>
+                                        <option value="shipped" ${order.order_status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                                        <option value="delivered" ${order.order_status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    html += '</tbody></table>';
+                    $('#ordersList').html(html);
+                }
+            });
+        }
+
+        function loadUsers() {
+            $.ajax({
+                url: '/api/admin/users',
+                method: 'GET',
+                headers: { 'Authorization': 'Bearer ' + token },
+                success: function(users) {
+                    let html = '<table class="table"><thead><tr><th>Username</th><th>Email</th><th>Admin</th></tr></thead><tbody>';
+                    users.forEach(user => {
+                        html += `
+                            <tr>
+                                <td>${user.username}</td>
+                                <td>${user.email}</td>
+                                <td>${user.is_admin ? 'Yes' : 'No'}</td>
+                            </tr>
+                        `;
+                    });
+                    html += '</tbody></table>';
+                    $('#usersList').html(html);
+                }
+            });
+        }
+
+        function deleteProduct(productId) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                $.ajax({
+                    url: `/api/admin/products/${productId}`,
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    success: function() {
+                        loadProducts();
+                    }
+                });
+            }
+        }
+
+        function updateOrderStatus(orderId, status) {
+            $.ajax({
+                url: `/api/admin/orders/${orderId}/status`,
+                method: 'PUT',
+                contentType: 'application/json',
+                headers: { 'Authorization': 'Bearer ' + token },
+                data: JSON.stringify({ order_status: status }),
+                success: function() {
+                    loadOrders();
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            loadProducts();
+            loadOrders();
+            loadUsers();
+
+            $('#addProductForm').submit(function(e) {
+                e.preventDefault();
+                const productData = {
+                    name: $('#productName').val(),
+                    description: $('#productDescription').val(),
+                    price: parseFloat($('#productPrice').val()),
+                    category: $('#productCategory').val(),
+                    image_url: $('#productImage').val(),
+                    stock_quantity: parseInt($('#productStock').val())
+                };
+
+                $.ajax({
+                    url: '/api/admin/products',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    data: JSON.stringify(productData),
+                    success: function() {
+                        $('#addProductModal').modal('hide');
+                        loadProducts();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
