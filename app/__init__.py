@@ -8,12 +8,14 @@ from .routes.orders import orders_bp
 from .routes.admin import admin_bp
 import os
 
+# Create the Flask application
+app = Flask(__name__, template_folder='templates', static_folder='static')
+
 def create_app(config_object=None):
-    app = Flask(__name__, template_folder='templates', static_folder='static')
+    global app
     
     # Load configuration
     if config_object is None:
-        # Load the default configuration
         app.config.from_object('config.config.Config')
     else:
         app.config.from_object(config_object)

@@ -1,12 +1,12 @@
 import os
-from app import create_app
+from app import app, create_app
 from config.config import config
 
 # Set default environment
 environment = os.environ.get('FLASK_ENV', 'production')
 
-# Create the Flask application
-app = create_app(config[environment])
+# Initialize the application with configuration
+create_app(config[environment])
 
 # Configure the app
 app.config['SERVER_NAME'] = None  # Allow all host headers
