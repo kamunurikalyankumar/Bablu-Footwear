@@ -4,12 +4,13 @@
     "env": {
         "PYTHON_VERSION": "3.12.0"
     },
-    "buildCommand": "pip install -r requirements.txt && pip install pymongo",
-    "startCommand": "gunicorn --log-level debug app:app",
+    "buildCommand": "pip install -r requirements.txt",
+    "startCommand": "gunicorn --bind 0.0.0.0:$PORT --workers 4 --threads 8 --timeout 0 --log-level debug app:app",
     "rootDir": ".",
     "envVars": {
         "FLASK_APP": "app.py",
         "FLASK_ENV": "production",
-        "PYTHONPATH": "."
+        "PYTHONPATH": ".",
+        "PORT": "10000"
     }
 }
