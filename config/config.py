@@ -20,6 +20,8 @@ class TestingConfig(Config):
 class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
+    # MongoDB Atlas URI for production
+    MONGODB_URI = os.environ.get('MONGODB_URI') or 'mongodb+srv://admin:admin@mernapp.m9qyw.mongodb.net/bablu_footwear'
 
 config = {
     'development': DevelopmentConfig,

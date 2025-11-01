@@ -3,8 +3,12 @@ from datetime import datetime
 import os
 
 # MongoDB connection - MongoDB Atlas
-client = MongoClient('mongodb+srv://admin:admin@mernapp.m9qyw.mongodb.net/?appName=MERNapp')
-db = client['ecommerce_db']
+from config.config import config
+import os
+
+environment = os.environ.get('FLASK_ENV', 'development')
+client = MongoClient(config[environment].MONGODB_URI)
+db = client['bablu_footwear']
 
 # Collections
 users_collection = db['users']
